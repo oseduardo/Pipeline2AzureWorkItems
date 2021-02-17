@@ -15,7 +15,7 @@ data=[
 def createWorkItem():
     myResponse = requests.post(myUrl,json=data,headers=myHeader)
     #print(myResponse.json())
-    print myResponse.text
+    print(myResponse.text)
 
 def main():
     createWorkItem()
