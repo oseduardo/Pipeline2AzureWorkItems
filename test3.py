@@ -17,7 +17,7 @@ def createWorkItem():
         myResponse = requests.post(myUrl,json=data,headers=myHeader)
         print(myResponse.json())
     except:
-        sys.ex('Error while creating Work Item!')
+        sys.exit('Error while creating Work Item!')
 
 def main():
     createWorkItem()
