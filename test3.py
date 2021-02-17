@@ -13,11 +13,8 @@ data=[
 ]
 
 def createWorkItem():
-    try:
-        myResponse = requests.post(myUrl,json=data,headers=myHeader)
-        print(myResponse.json())
-    except:
-        sys.exit('Error while creating Work Item!')
+    myResponse = requests.post(myUrl,json=data,headers=myHeader)
+    print(myResponse.json())
 
 def main():
     createWorkItem()
