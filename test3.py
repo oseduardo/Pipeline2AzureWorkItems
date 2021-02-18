@@ -12,13 +12,13 @@ if str(args.t) == "None":
 else:
     myToken = str(args.t)
 
-myUrl='https://dev.azure.com/oscarrodriguezarias/PipelineScan2AzureWorkItems/_apis/wit/workitems/${type}?api-version=6.0'
+myUrl='https://dev.azure.com/oscarrodriguezarias/PipelineScan2AzureWorkItems/_apis/wit/workitems/$bug?api-version=6.0'
 myHeader={'Content-Type': 'application/json-patch+json', 'Authorization': 'Bearer ' + myToken}
 data=[
     {
         "op": "add",
         "path": "/fields/System.Title",
-        "value": "Sample Task"
+        "value": "Sample Bug"
     }
 ]
 
