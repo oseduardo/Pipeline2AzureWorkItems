@@ -10,6 +10,16 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+- bash: echo This script could use $SYSTEM_ACCESSTOKEN
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo $SYSTEM_ACCESS_TOKEN
+
 - task: PythonScript@0
   inputs:
     scriptSource: 'filePath'
