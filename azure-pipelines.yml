@@ -18,7 +18,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      echo $(SYSTEM_ACCESS_TOKEN)
+      echo $(System.AccessToken)
 
 - task: PythonScript@0
   inputs:
