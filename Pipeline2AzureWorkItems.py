@@ -152,13 +152,13 @@ def preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, 
 
 
 def createworkitem(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id):
-    try:
+#    try:
         # INCLUDE HERE API CALL TO CREATE WORK ITEM IN AZURE DEVOPS
         reqBody = preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id)
         myResponse = requests.post(myUrl, json=reqBody, headers=myHeader)
-        print(myResponse.status_code + " - " + myResponse.text)
-    except:
-        sys.exit("Error while creating work item in Azure DevOps!")
+        print(myResponse.status_code)
+#    except:
+#        sys.exit("Error while creating work item in Azure DevOps!")
 
 
 def main():
