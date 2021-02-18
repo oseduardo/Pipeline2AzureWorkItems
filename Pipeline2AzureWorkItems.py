@@ -3,127 +3,171 @@ import json
 import argparse
 import sys
 
-#This script is based on Azure DevOps Services REST API 6.0
-authorize_url = "https://app.vssps.visualstudio.com/oauth2/authorize"
-token_url = "https://app.vssps.visualstudio.com/oauth2/token"
+flaws = {}
+vulns = {}
+vsum = {}
+vulnlist = []
 
+#
+# This script is based on Azure DevOps Services REST API 6.0
 ##############################################################################
 # Setup CLI Parser
-# CLI Call (Usage): $python Pipeline2AzureWorkItems.py [-o Organization Name in Azure DevOps] [-p Project Name in Azure DevOps]
+# CLI Call (Usage): $python Pipeline2AzureWorkItems.py [-o Organization Name in Azure DevOps]
+#                                                       [-p Project Name in Azure DevOps]
 #                                                       [-t Work Item Type to Create] [-c Callback URI]
 #                                                       [-a App ID to connect to Azure DevOps]
 #                                                       [-i Client ID to connect to Azure DevOps]
 #                                                       [-s Client Secret to connect to Azure DevOps]
 #                                                       [-sc Scope configured when App was registered in Azure DeVops]
 parser = argparse.ArgumentParser(description='Accept flags from CLI')
-parser.add_argument('-o', action='store', help='Azure DevOps Organization where the Work item will be created', type=str)
+parser.add_argument('-o', action='store', help='Azure DevOps Organization where the Work item will '
+                                               'be created', type=str)
 parser.add_argument('-p', action='store', help='Azure DevOps Project where the Work item will be created', type=str)
-parser.add_argument('-t', action='store', help='Azure DevOps Work item type', type=str, default='Task')
-parser.add_argument('-c', action='store', help='Callback URI when the application was defined in Azure DevOps', type=str)
-parser.add_argument('-a', action='store', help='App ID', type=str)
-parser.add_argument('-i', action='store', help='Client ID', type=str)
-parser.add_argument('-s', action='store', help='Client Secret', type=str)
-parser.add_argument('-sc', action='store', help='Scope for App registered in Azure DevOps', type=str)
-parser.add_argument('-pat', action='store', help='Personal Token Authentication to access to Azure Services APIs', type=str)
+parser.add_argument('-t', action='store', help='Azure DevOps Work item type. It is necessary to be '
+                                               'sure that your Azure Project is created supporting '
+                                               'the specified Work Item Type', type=str, default='task')
+parser.add_argument('-token', action='store', help='Azure Pipeline Token used in pipeline execution', type=str)
+parser.add_argument('-f', action='store', help='Full path to json file gotten from Pipeline Scan execution', type=str)
 args = parser.parse_args()
 
-organization = "oscarrodriguezarias"
-#if str(args.o) == "None":
-#    sys.exit("ERROR. A DevOps Organization is required!")
-#else:
-#    organization = str(args.o)
+if str(args.o) == "None":
+    sys.exit("ERROR. A DevOps Organization is required!")
+else:
+    organization = str(args.o)
 
-project = "verademo"
-#if str(args.p) == "None":
-#    sys.exit("ERROR. A DevOps Project is required!")
-#else:
-#    project = str(args.p)
+if str(args.p) == "None":
+    sys.exit("ERROR. A DevOps Project is required!")
+else:
+    project = str(args.p)
 
-type = "task"
-#if str(args.t) == "None":
-#    sys.exit("ERROR. A Work Item Type is required!")
-#else:
-#    type = str(args.t)
+if str(args.t) == "None":
+    sys.exit("ERROR. A Work Item Type is required!")
+else:
+    myType = str(args.t)
 
-#callback url specified when the application was defined
-callback_uri = "https://www.veracode.com"
-#if str(args.c) == "None":
-#    sys.exit("ERROR. A Callback URI is required!")
-#else:
-#    callback_uri = str(args.c)
+if str(args.token) == "None":
+    sys.exit("ERROR. A token is required!")
+else:
+    myToken = str(args.token)
 
-#App ID for connecting to Azure DevOps
-app_id = "77EFB79A-99CA-4485-BF0F-5E469FE24B5D"
-#if str(args.a) == "None":
-#    sys.exit("ERROR. App ID is required!")
-#else:
-#    app_id = str(args.a)
+if str(args.f) == "None":
+    jsonFile = 'results.json'
+else:
+    jsonFile = str(args.f)
 
-#Client ID for connecting to Azure DevOps
-client_id = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIs"
-#if str(args.i) == "None":
-#    sys.exit("ERROR. Client ID is required!")
-#else:
-#    client_id = str(args.i)
+myUrl = 'https://dev.azure.com/' + organization + '/' + project + '/_apis/wit/workitems/$' + myType + '?api-version=6.0'
+myHeader = {'Content-Type': 'application/json-patch+json', 'Authorization': 'Bearer ' + myToken}
 
-#Client Secret for connecting to Azure DevOps
-client_secret = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Im9PdmN6NU1fN3AtSGpJS2xGWHo5M3VfVjBabyJ9.eyJjaWQiOiI3N2VmYjc5YS05OWNhLTQ0ODUtYmYwZi01ZTQ2OWZlMjRiNWQiLCJjc2kiOiI2M2ViNWY1OS01YzMxLTQzN2QtYWRmNi1hM2E5MmVjNTAzMDEiLCJuYW1laWQiOiJhNGMzNmVjNi01ZmNkLTY0NjYtYmU1Mi1iZjBhMTI2M2JmZDYiLCJpc3MiOiJhcHAudnN0b2tlbi52aXN1YWxzdHVkaW8uY29tIiwiYXVkIjoiYXBwLnZzdG9rZW4udmlzdWFsc3R1ZGlvLmNvbSIsIm5iZiI6MTYwODU2ODkyMywiZXhwIjoxNzY2MzM1MzIzfQ.JKN8opuv-xNb1xUxfWl6dwhR8gh77yFg0V7RmGzO9QFq5F14AOIWpsVDHRM4Gi3_Wue07qV1r30CukQpWYd20OLIvZYzr4O4UVB5-5q54Ou1hxaVBczVorAuuG_zJUa0PDfY_yuu2LmeUlDVmmSLr7Ibx5B9gbq7i7mpT3HzRAnlbxY0eDc0UaMrBvuwKFJeGmHdzxsAlAp9oUVNVZ1mcgZP7Pr02txjKIDwJ9ssRSQu4NbvxjM8OHZcv4ozos6LtB9kK1dLZOoo23zaqQirgkR-DsCglwSuANNcg8RsQPp5e1_KsKcPGrl-nHwYEVqbdfcPUpLqqJzdcZ7SiuWegQ"
-#if str(args.s) == "None":
-#    sys.exit("ERROR. Client Secret is required!")
-#else:
-#    client_secret = str(args.s)
 
-#Scope for App registered in Azure DevOps
-scope = "vso.work_full"
-#if str(args.sc) == "None":
-#    sys.exit("ERROR. Scope is required!")
-#else:
-#    scope = str(args.sc)
+def getjsondata():
+    try:
+        with open(jsonFile) as json_file:
+            pipelinedata = json.load(json_file)
+            # data2 = json.dumps(pipelinedata, indent=4)
+            # print(data2)
+            vulncount = 0
+            if pipelinedata['scan_status'] == "SUCCESS":
+                for v in pipelinedata['findings']:
+                    title = v['title']
+                    issueid = str(v['issue_id'])
+                    severity = str(v['severity'])
+                    if severity == "5":
+                        sevname = "Very High"
+                    elif severity == "4":
+                        sevname = "High"
+                    elif severity == "3":
+                        sevname = "Medium"
+                    elif severity == "2":
+                        sevname = "Low"
+                    elif severity == "1":
+                        sevname = "Very Low"
+                    elif severity == "0":
+                        sevname = "Informational"
+                    issuetype = v['issue_type']
+                    cweid = v['cwe_id']
+                    displaytext = v['display_text']
+                    src = v['files']['source_file']['file']
+                    if "/" in src:
+                        src_file = src.split('/')
+                        src_file_len = len(src_file)
+                        file = ''.join(src_file[src_file_len - 1:])
+                    elif "\\" in src:
+                        src_file = src.split('\\')
+                        src_file_len = len(src_file)
+                        file = ''.join(src_file[src_file_len - 1:])
+                    else:
+                        src_file = src
+                        file = src_file
+                    path = src.replace(file, '')
+                    line = str(v['files']['source_file']['line'])
+                    qualifiedfunctionname = v['files']['source_file']['qualified_function_name']
+                    functionprototype = v['files']['source_file']['function_prototype']
+                    scope = v['files']['source_file']['scope']
+                    flaws[vulncount] = {'title': title, 'issueid': issueid, 'severity': severity,
+                                        'issuetype': issuetype, 'cweid': cweid, 'displaytext': displaytext,
+                                        'file': file, 'path': path, 'line': line,
+                                        'qualifiedfunctionname': qualifiedfunctionname,
+                                        'functionprototype': functionprototype, 'scope': scope}
+                    vulns[vulncount] = {'title': title, 'issueid': issueid, 'severity': sevname, 'issuetype': issuetype,
+                                        'cweid': cweid, 'displaytext': displaytext, 'file': file, 'path': path,
+                                        'line': line, 'qualifiedfunctionname': qualifiedfunctionname,
+                                        'functionprototype': functionprototype, 'scope': scope}
+                    vulnlist.append(
+                        [str(cweid), str(sevname), str(title), str(issuetype), str(file), str(line), str(scope),
+                         str(issueid)])
+                    vulncount = vulncount + 1
+            else:
+                sys.exit("Pipeline scan status not successful")
+    except:
+        sys.exit("Error within capturing JSON data (see getjsondata)")
 
-#Personal Token Access to authenticate to Azure DevOps Service APIs
-pat = "hnalx7h7w4no6tk54tqwc25rsgztcqc6qzfuipnykb3bj5zznpaq"
-#if str(args.pat) == "None":
-#    sys.exit("ERROR. Personal Access Token is required!")
-#else:
-#    pat = str(args.pat)
-##############################################################################
 
-#token_url_payload = str.format("client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion={0}&grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion={1}&redirect_uri={2}", client_secret.encode(encoding="ascii",errors="strict"))
+def processazureworkitems():
+    try:
+        for x in vulnlist:
+            createworkitem(x[0], x[1], x[3], x[5], x[4], x[6], x[7])
+    except:
+        sys.exit("Error while creating work items - See createWorkItem")
 
-json_body = "[  {    '"'op'"': '"'add'"',    '"'path'"': '"'/fields/System.Title'"',    '"'from'"': null,    '"'value'"': '"'Sample task'"'  }  ]"
 
-create_work_item_api_url = "https://dev.azure.com/" + organization.encode(encoding="ascii",errors="strict") + "/" + project.encode(encoding="ascii",errors="strict") + "/_apis/wit/workitems/$" + type.encode(encoding="ascii",errors="strict") + "?validateOnly=false&bypassRules=false&suppressNotifications=false&$expand=none&api-version=6.0"
-create_work_item_response = requests.post(create_work_item_api_url, headers={"Content-Type": "application/json"}, json=json.dumps(json_body), auth=('',pat.encode(encoding="base64_codec",errors="strict")))
-print create_work_item_response.status_code
+def preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id):
+    #
+    # We are defining only Title and Description for Work Item.
+    # Additional info can be added taking into account project scope.
+    #
+    rB = [
+        {
+            "op": "add",
+            "path": "/fields/System.Title",
+            "value": "Veracode Pipeline Scan - Flaw ID: " + issue_id
+        },
+        {
+            "op": "add",
+            "path": "/fields/System.Description",
+            "value": "CWE: " + cwe_id + " - Severity: " + severity_name + " - Issue Type: " + issue_type +
+                     " - File: " + file_name + " - Line: " + code_line + " - Scope: " + scope
+        }
+    ]
+    return rB
 
-#step A - simulate a request from a browser on the authorize_url - will return an authorization code after the user is
-# prompted for credentials.
 
-#authorization_redirect_url = authorize_url.encode(encoding="ascii",errors="strict") + '?response_type=Assertion&client_id=' + app_id.encode(encoding="ascii",errors="strict") + '&redirect_uri=' + callback_uri.encode(encoding="ascii",errors="strict") + '&scope=' + scope.encode(encoding="ascii",errors="strict")
-#authorization_response = requests.get(authorization_redirect_url)
-#print "Results of authorization response.... Authorization URL: " + authorization_redirect_url
-#print authorization_response.status_code
-#print authorization_response.text
+def createworkitem(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id):
+    try:
+        # INCLUDE HERE API CALL TO CREATE WORK ITEM IN AZURE DEVOPS
+        reqBody = preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id)
+        myResponse = requests.post(myUrl, json=reqBody, headers=myHeader)
+        print(myResponse.status_code + ' - Work item was successfully created!')
+    except:
+        sys.exit("Error while creating work item in Azure DevOps!")
 
-#print "go to the following url on the browser and enter the code from the returned url: "
-#print "---  " + authorization_redirect_url + "  ---"
-#authorization_code = raw_input('code: ')
 
-# step I, J - turn the authorization code into a access token, etc
-data = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': callback_uri}
-print "requesting access token"
-access_token_response = requests.post(token_url, data=data, verify=False, allow_redirects=False, auth=(client_id, client_secret))
+def main():
+    #
+    # Load JSON data
+    #
+    getjsondata()
 
-#print "response"
-#print access_token_response.headers
-#print 'body: ' + access_token_response.text
+    processazureworkitems()
 
-# we can now use the access_token as much as we want to access protected resources.
-#tokens = json.loads(access_token_response.text)
-#access_token = tokens['access_token']
-#print "access token: " + access_token
 
-#api_call_headers = {'Authorization': 'Bearer ' + access_token}
-#api_call_response = requests.get(create_work_item_api_url, headers=api_call_headers, verify=False)
-
-#print api_call_response.text
+main()
