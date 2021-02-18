@@ -12,8 +12,8 @@ data=[
     }
 ]
 
-def createWorkItem():
-    myResponse = requests.post(myUrl,json=data,headers=myHeader)
+def createWorkItem(myToken):
+    myResponse = requests.post(myUrl,json=data,headers=myHeader,auth=('',myToken))
     #print(myResponse.json())
     print(myResponse.text)
 
