@@ -28,6 +28,7 @@ parser.add_argument('-t', action='store', help='Azure DevOps Work item type. It 
                                                'the specified Work Item Type', type=str, default='task')
 parser.add_argument('-token', action='store', help='Azure Pipeline Token used in pipeline execution', type=str)
 parser.add_argument('-f', action='store', help='Full path to json file gotten from Pipeline Scan execution', type=str)
+parser.add_argument('-bid', action='store', help='Build Id from Azure pipeline execution', type=str)
 args = parser.parse_args()
 
 if str(args.o) == "None":
@@ -54,6 +55,11 @@ if str(args.f) == "None":
     jsonFile = 'results.json'
 else:
     jsonFile = str(args.f)
+
+if str(args.bid) == "None":
+    sys.exit("ERROR. A Build Id is required!")
+else:
+    buildId = str(args.bid)
 
 myUrl = 'https://dev.azure.com/' + organization + '/' + project + '/_apis/wit/workitems/$' + myType + '?api-version=6.0'
 myHeader = {'Content-Type': 'application/json-patch+json', 'Authorization': 'Bearer ' + myToken}
@@ -139,7 +145,7 @@ def preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, 
         {
             "op": "add",
             "path": "/fields/System.Title",
-            "value": "Veracode Pipeline Scan - Flaw ID: " + issue_id
+            "value": "Build Id: " + str(buildId) + " - Veracode Pipeline Scan - Flaw ID: " + issue_id
         },
         {
             "op": "add",
@@ -152,13 +158,14 @@ def preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, 
 
 
 def createworkitem(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id):
-#    try:
+    try:
         # INCLUDE HERE API CALL TO CREATE WORK ITEM IN AZURE DEVOPS
         reqBody = preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id)
         myResponse = requests.post(myUrl, json=reqBody, headers=myHeader)
-        print(myResponse.text)
-#    except:
-#        sys.exit("Error while creating work item in Azure DevOps!")
+        myText = myResponse.status_code + ' - ' + 'Work item was created successfully!'
+        print(myText)
+    except:
+        sys.exit("Error while creating work item in Azure DevOps!")
 
 
 def main():
