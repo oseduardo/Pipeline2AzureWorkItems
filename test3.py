@@ -24,6 +24,7 @@ data=[
 
 def createWorkItem():
     myResponse = requests.post(myUrl,json=data,headers=myHeader)
+    print(myResponse.status_code)
     print(myResponse.json())
     #print(myResponse.text)
 
