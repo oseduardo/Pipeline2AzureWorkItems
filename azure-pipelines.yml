@@ -14,14 +14,8 @@ steps:
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-- task: Bash@3
-  inputs:
-    targetType: 'inline'
-    script: |
-      echo $(System.AccessToken)
-
 - task: PythonScript@0
   inputs:
     scriptSource: 'filePath'
-    scriptPath: './test3.py'
-    arguments: '-t $(System.AccessToken)'
+    scriptPath: './Pipeline2AzureWorkItems.py'
+    arguments: '-o oscarrodriguezarias -p Pipeline2AzureWorkItems -t task -token $(System.AccessToken) -f ./results.json'
