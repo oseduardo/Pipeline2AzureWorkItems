@@ -145,7 +145,7 @@ def preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, 
         {
             "op": "add",
             "path": "/fields/System.Title",
-            "value": "Build Id: " + str(buildId) + " - Veracode Pipeline Scan - Flaw ID: " + issue_id
+            "value": "[Veracode Pipeline Scan] Build Id: " + str(buildId) + " - Flaw ID: " + issue_id
         },
         {
             "op": "add",
