@@ -161,7 +161,7 @@ def createworkitem(cwe_id, severity_name, issue_type, code_line, file_name, scop
 #    try:
     reqBody = preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id)
     myResponse = requests.post(myUrl, json=reqBody, headers=myHeader)
-    myText = myResponse.status_code + ' - ' + 'Work item was created successfully!'
+    myText = str(myResponse.status_code) + ' - ' + 'Work item was created successfully!'
     print(myText)
 #    except:
 #        sys.exit("Error while creating work item in Azure DevOps!")
