@@ -18,4 +18,4 @@ steps:
   inputs:
     scriptSource: 'filePath'
     scriptPath: './Pipeline2AzureWorkItems.py'
-    arguments: '-o oscarrodriguezarias -p PipelineScan2AzureWorkItems -t task -token $(System.AccessToken) -f ./results.json'
+    arguments: '-o oscarrodriguezarias -p PipelineScan2AzureWorkItems -t task -token $(System.AccessToken) -f ./results.json -bid $(Build.BuildId)'
