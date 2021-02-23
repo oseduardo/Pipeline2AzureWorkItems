@@ -129,11 +129,11 @@ def getjsondata():
 
 
 def processazureworkitems():
-    try:
-        for x in vulnlist:
-            createworkitem(x[0], x[1], x[3], x[5], x[4], x[6], x[7])
-    except:
-        sys.exit("Error while creating work items - See createWorkItem")
+#    try:
+    for x in vulnlist:
+        createworkitem(x[0], x[1], x[3], x[5], x[4], x[6], x[7])
+#    except:
+#        sys.exit("Error while creating work items - See createWorkItem")
 
 
 def preparerequestbody(cwe_id, severity_name, issue_type, code_line, file_name, scope, issue_id):
