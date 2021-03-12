@@ -6,7 +6,7 @@ This is an initial approach and must be intended like that: It only reads the .j
 
 Let me say that this project is based on the parsing of .json file created by Jason Phillips on https://github.com/jphillips-vc/pipeline2detailedreport 
 
-USAGE: python Pipeline2AzureWorkItems.py [-o Organization Name in Azure] [-p Project Name in Azure] [-t task] [-token $(System.AccessToken)] [-f filename.json] [-bid $(Build.BuildId)]
+<b>USAGE: python Pipeline2AzureWorkItems.py [-o Organization Name in Azure] [-p Project Name in Azure] [-t task] [-token $(System.AccessToken)] [-f filename.json] [-bid $(Build.BuildId)]</b>
 
 -o is the Organization Name in Azure where you will create the work items
 
@@ -20,7 +20,7 @@ USAGE: python Pipeline2AzureWorkItems.py [-o Organization Name in Azure] [-p Pro
 
 -bid BuildId to create work itmes with information that allows you to identify the related build
 
-STEPS
+<b>STEPS</b>
 
 - Place Pipeline2AzureWorkItems.py file in your pipeline output folder where your results.json file resides.
 
